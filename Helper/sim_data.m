@@ -10,7 +10,7 @@ if dataInp == 1 || dataInp == 4
     avgSelf = nanmean(TRAIT_125_bot(1:80,:),2);
     avgSelf = avgSelf(item60);
 
-    sweepR = corr( TRAIT_125_bot(1:80,:)', 'rows', 'pairwise');
+    sweepR = corr(TRAIT_125_bot(1:80,:)', 'rows', 'pairwise');
 elseif dataInp == 2 || dataInp == 3
     load 'Data\ML_conv_125_to_60_v1.mat' conv_125_to_60;
 %     toDelete = find( (ismember(1:125, conv_125_to_60)) == 0);
@@ -19,7 +19,7 @@ elseif dataInp == 2 || dataInp == 3
     avgSelf = nanmean(TRAIT_125_bot(:,:),2);
     avgSelf = avgSelf(item60);
 
-    sweepR = corr( TRAIT_125_bot(:,:)', 'rows', 'pairwise');
+    sweepR = corr(TRAIT_125_bot(:,:)', 'rows', 'pairwise');
 else
     item60 = 1:50;
     load Data\summData avgSelf sweepR
@@ -46,18 +46,25 @@ modUse = '';
 numIt = numParam;
 simData = zeros(dataSize, numIt, 5);
 for iSim = 1:numIt
-%     [~, simData(:,iSim,1)]    = pseudolinearregressionmodel(data, [parameters(iSim,1),4.5]);
-%     [~, simData(:,iSim,2)]    = optimalsimplemodel(data, [parameters(iSim,1),4.5]);
-%     [~, ~, simData(:,iSim,3)] = rlselfmodel(data, parameters(iSim,:));
-%     [~, ~, simData(:,iSim,4)] = sweepmodel(data, [parameters(iSim,1),4.5], sweepR);
-%     [~, ~, simData(:,iSim,5)] = sweepmodelself(data, parameters(iSim,:), sweepR);
-    [~, simData(:,iSim,1)]    = pseudolinearregressionmodel(data, parameters(iSim,[1 3]));
-    [~, simData(:,iSim,2)]    = optimalsimplemodel(data, parameters(iSim,[1 3]));
-    [~, ~, simData(:,iSim,3)] = rlselfmodel(data, parameters(iSim,:));
-    [~, ~, simData(:,iSim,4)] = sweepmodel(data, parameters(iSim,[1 3]), sweepR);
-    [~, ~, simData(:,iSim,5)] = sweepmodelself(data, parameters(iSim,:), sweepR);
+    if size(parameters,2) == 2
+        [~, simData(:,iSim,1)]    = mod01_No_Learning(data, [parameters(iSim,1),4.5]);
+        [~, simData(:,iSim,2)]    = mod02_Coarse_Granularity(data, [parameters(iSim,1),4.5]);
+        [~, ~, simData(:,iSim,3)] = mod03_CG_Pop_RP(data, parameters(iSim,:));
+        [~, ~, simData(:,iSim,4)] = mod04_Fine_Granularity(data, [parameters(iSim,1),4.5], sweepR);
+        [~, ~, simData(:,iSim,5)] = mod05_FG_Pop_RP(data, parameters(iSim,:), sweepR);
+    elseif size(parameters,2) == 3    
+        [~, simData(:,iSim,1)]    = mod01_No_Learning(data, parameters(iSim,[1 3]));
+        [~, simData(:,iSim,2)]    = mod02_Coarse_Granularity(data, parameters(iSim,[1 3]));
+        [~, ~, simData(:,iSim,3)] = mod03_CG_Pop_RP(data, parameters(iSim,:));
+        [~, ~, simData(:,iSim,4)] = mod04_Fine_Granularity(data, parameters(iSim,[1 3]), sweepR);
+        [~, ~, simData(:,iSim,5)] = mod05_FG_Pop_RP(data, parameters(iSim,:), sweepR);
+    else
+        error('Did not get a correct number of parameters size([],2) should be: 2 or 3')
+    end
 end
 
 % Add some noise
-simNoise = randn([dataSize, numIt, 5]);
+simNoise = randn([dataSize, numIt, 5])*.5;
 simData = simData + simNoise;
+simData(simData < 1) = 1;
+simData(simData > 8) = 8;

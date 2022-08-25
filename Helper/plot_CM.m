@@ -18,15 +18,16 @@ sz = size(CM);
 if sz(1) ~= sz(2); error('Expected a symmetrical matrix'); end
 
 % Use imagesc to plot initial values
-figure; clf;
+% figure; clf;
 imagesc(CM)
 
 
 %% Add the percentages to the squares
-CM_per = CM./sum(CM,2);
+% CM_per = CM./sum(CM,2);
 for iY = 1:sz(1)
     for iX = 1:sz(2)
-        t(iX,iY) = text(iX,iY, num2str(round(CM_per(iY,iX),3)*100)); %#ok<AGROW>
+%         t(iX,iY) = text(iX,iY, num2str(round(CM_per(iY,iX),3)*100)); %#ok<AGROW>
+        t(iX,iY) = text(iX,iY, num2str(round(CM(iY,iX),3)*100)); %#ok<AGROW>
         set(t(iX,iY), 'horizontalalignment', 'center', 'verticalalignment', 'middle');
     end
 end
